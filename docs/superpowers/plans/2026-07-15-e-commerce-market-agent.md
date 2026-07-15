@@ -148,6 +148,10 @@ sample_reports/            # generated example
 - [ ] **Step 1: Create `pyproject.toml`**
 
 ```toml
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "e-commerce-market-agent"
 version = "0.1.0"
@@ -167,6 +171,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.3.0", "pytest-asyncio>=0.24.0"]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
@@ -661,12 +668,37 @@ git commit -m "feat: deterministic seeded mock data generators"
 
 **Interfaces:**
 - Consumes: `BaseTool` (Task 3), `mockdata` (Task 4), `get_settings` (Task 1).
-- Produces: `WebScraperTool.run(product, marketplace=None) -> ToolResult` with `data={"price","currency","source","competitors":[{"name","price"}]}`. `source` is `"live"` or `"mock"`.
+- Produces: `WebScraperTool.run(product, marketplace=None) -> ToolResult` with `data={"price","currency","source","competitors":[{"name","price"}]}`. `source` is `"live"` or `"mock"`. Live path genuinely fetches + parses DummyJSON; `_parse(payload)` is a pure staticmethod so it is unit-testable without network.
 
 - [ ] **Step 1: Write the failing test** — `tests/test_web_scraper.py`
 
 ```python
 from app.tools.web_scraper import WebScraperTool
+
+# A realistic DummyJSON search payload (trimmed to the fields we read).
+SAMPLE_PAYLOAD = {
+    "products": [
+        {"title": "iPhone 15", "brand": "Apple", "price": 999.0},
+        {"title": "iPhone 15 Case", "brand": "Spigen", "price": 19.0},
+        {"title": "Phone Charger", "brand": "Anker", "price": 25.0},
+        {"title": "Screen Protector", "brand": "ESR", "price": 9.0},
+    ]
+}
+
+
+def test_parse_extracts_price_and_competitors():
+    data = WebScraperTool._parse(SAMPLE_PAYLOAD)
+    assert data["source"] == "live"
+    assert data["price"] == 999.0
+    assert data["currency"] == "USD"
+    assert len(data["competitors"]) == 3
+    assert data["competitors"][0]["name"] == "Spigen"
+
+
+def test_parse_raises_on_empty_results():
+    import pytest
+    with pytest.raises(ValueError):
+        WebScraperTool._parse({"products": []})
 
 
 def test_fallback_to_mock_when_live_disabled(monkeypatch):
@@ -717,34 +749,54 @@ logger = get_logger("tools.web_scraper")
 class WebScraperTool(BaseTool):
     """Collect product price + competitor prices.
 
-    Strategy: attempt a live scrape when enabled, fall back to deterministic
-    mock data on any failure so the demo always produces a result.
+    Strategy: when live scraping is enabled, genuinely fetch structured product
+    data from DummyJSON (a real, key-less product API) and parse a price plus
+    competitor prices. On any network/parse failure, or when disabled, fall back
+    to deterministic mock data so the demo always produces a result.
     """
 
     name = "web_scraper"
+    SEARCH_URL = "https://dummyjson.com/products/search"
 
     def _execute(self, product: str, marketplace: str | None = None) -> dict:
         settings = get_settings()
         if settings.enable_live_scrape:
             try:
-                return self._scrape_live(product, marketplace, settings.request_timeout)
+                return self._scrape_live(product, settings.request_timeout)
             except Exception as exc:  # noqa: BLE001 - fall back, never crash
                 logger.warning("live scrape failed (%s); using mock", exc)
         return self._mock(product)
 
-    def _scrape_live(self, product: str, marketplace: str | None, timeout: int) -> dict:
-        # Minimal real request against a public price sandbox. Any parsing/network
-        # error propagates and triggers the mock fallback in _execute.
-        url = "https://www.google.com/search"
+    def _scrape_live(self, product: str, timeout: int) -> dict:
         resp = httpx.get(
-            url, params={"q": f"{product} price {marketplace or ''}"}, timeout=timeout,
-            headers={"User-Agent": "Mozilla/5.0"},
+            self.SEARCH_URL,
+            params={"q": product, "limit": 5},
+            timeout=timeout,
+            headers={"User-Agent": "market-agent/0.1"},
         )
         resp.raise_for_status()
-        # Real price extraction from search HTML is unreliable; we intentionally
-        # do not parse a fake price here. Treat "no structured price" as a failure
-        # so we fall back to deterministic mock data.
-        raise ValueError("no structured price extracted from live source")
+        return self._parse(resp.json())
+
+    @staticmethod
+    def _parse(payload: dict) -> dict:
+        """Pure parser over a DummyJSON search response. Raises on empty results."""
+        products = payload.get("products", [])
+        if not products:
+            raise ValueError("no live results")
+        top = products[0]
+        competitors = [
+            {
+                "name": p.get("brand") or str(p.get("title", "Unknown"))[:24],
+                "price": float(p["price"]),
+            }
+            for p in products[1:4]
+        ]
+        return {
+            "price": float(top["price"]),
+            "currency": "USD",
+            "source": "live",
+            "competitors": competitors,
+        }
 
     def _mock(self, product: str) -> dict:
         price, currency = mock_price(product)
