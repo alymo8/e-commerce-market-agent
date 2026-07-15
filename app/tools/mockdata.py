@@ -55,6 +55,7 @@ def mock_series(product: str, months: int = 6) -> tuple[list[dict], list[dict]]:
     price = base
     pop = rng.uniform(40, 90)
     for i in range(months, 0, -1):
+        # Month-index computation relies on Python floor-division/modulo for negative operands to roll back across year boundaries
         m = (today.month - i - 1) % 12 + 1
         y = today.year + ((today.month - i - 1) // 12)
         label = f"{y:04d}-{m:02d}"
