@@ -39,6 +39,27 @@ def build_graph():
 _GRAPH = build_graph()
 
 
+def _minimal_report(product: str, marketplace: str | None, errors: list[dict]) -> dict:
+    """Guarantee the 'always returns a report' invariant even if assembly failed."""
+    from datetime import datetime, timezone
+    warnings = [f"{e.get('tool', '?')}: {e.get('error', '')}" for e in errors]
+    warnings.append("report_generator: assembly failed; returning minimal report")
+    return {
+        "product": product,
+        "marketplace": marketplace,
+        "price": {"price": 0.0, "currency": "USD", "source": "mock"},
+        "competitors": [],
+        "sentiment": {"positive": 0, "neutral": 0, "negative": 0, "total": 0,
+                      "top_positive_themes": [], "top_negative_themes": []},
+        "trend": {"direction": "stable", "price_change_pct": 0.0,
+                  "price_history": [], "popularity": []},
+        "summary": f"Analysis for {product} could not be fully assembled.",
+        "recommendations": ["Retry the analysis; some components failed."],
+        "warnings": warnings,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
 def run_analysis(product: str, marketplace: str | None = None) -> MarketReport:
     initial: AgentState = {
         "run_id": str(uuid.uuid4()),
@@ -48,4 +69,11 @@ def run_analysis(product: str, marketplace: str | None = None) -> MarketReport:
         "synthesis": None, "report": None, "errors": [],
     }
     final = _GRAPH.invoke(initial)
-    return MarketReport.model_validate(final["report"])
+    report = final.get("report")
+    if report is None:
+        report = _minimal_report(
+            final.get("product", product),
+            final.get("marketplace", marketplace),
+            final.get("errors", []),
+        )
+    return MarketReport.model_validate(report)

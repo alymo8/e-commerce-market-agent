@@ -37,6 +37,26 @@ def test_synthesize_node_falls_back_on_llm_error(monkeypatch):
     assert update["synthesis"]["recommendations"]  # safe default present
 
 
+def test_synthesize_node_falls_back_on_malformed_shape(monkeypatch):
+    monkeypatch.setattr(
+        nodes, "complete_json",
+        lambda system, user: {"summary": "ok", "recommendations": "not-a-list"},
+    )
+    state = {
+        "product": "iPhone 15", "marketplace": "amazon",
+        "scrape": {"price": 1.0, "currency": "USD", "source": "mock", "competitors": []},
+        "sentiment": {"positive": 1, "neutral": 0, "negative": 0, "total": 1,
+                      "top_positive_themes": [], "top_negative_themes": []},
+        "trend": {"direction": "up", "price_change_pct": 1.0,
+                  "price_history": [], "popularity": []},
+        "errors": [],
+    }
+    update = nodes.synthesize_node(state)
+    assert "synthesis" in update
+    assert isinstance(update["synthesis"]["recommendations"], list)
+    assert update["errors"]  # error recorded
+
+
 def test_plan_node_preserves_marketplace_when_plan_returns_none(monkeypatch):
     monkeypatch.setattr(
         nodes, "complete_json",

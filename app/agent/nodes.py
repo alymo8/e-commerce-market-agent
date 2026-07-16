@@ -72,8 +72,13 @@ def synthesize_node(state: dict) -> dict:
     )
     try:
         synthesis = complete_json(SYNTHESIS_SYSTEM, user)
-        if "summary" not in synthesis or "recommendations" not in synthesis:
-            raise ValueError("synthesis missing required keys")
+        if (
+            not isinstance(synthesis.get("summary"), str)
+            or not synthesis["summary"].strip()
+            or not isinstance(synthesis.get("recommendations"), list)
+            or not synthesis["recommendations"]
+        ):
+            raise ValueError("synthesis has malformed summary/recommendations")
         return {"synthesis": synthesis}
     except Exception as exc:  # noqa: BLE001 - degrade to a safe default summary
         logger.warning("synthesis failed: %s", exc)
