@@ -12,3 +12,9 @@ def test_extract_json_raises_when_absent():
     import pytest
     with pytest.raises(ValueError):
         extract_json_object("no json here")
+
+
+def test_extract_json_raises_valueerror_on_malformed():
+    import pytest
+    with pytest.raises(ValueError):
+        extract_json_object("prefix {not: valid json,,} suffix")

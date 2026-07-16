@@ -20,13 +20,18 @@ def get_llm() -> ChatOpenAI:
 
 
 def extract_json_object(text: str) -> dict:
+    # Assumes a single JSON object per reply; greedy match spans nested braces.
     match = _JSON_RE.search(text)
     if not match:
         raise ValueError("no JSON object found in LLM reply")
-    return json.loads(match.group(0))
+    try:
+        return json.loads(match.group(0))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"malformed JSON in LLM reply: {exc}") from exc
 
 
 def complete_json(system: str, user: str) -> dict:
     llm = get_llm()
     reply = llm.invoke([("system", system), ("human", user)])
-    return extract_json_object(reply.content)
+    content = reply.content if isinstance(reply.content, str) else str(reply.content)
+    return extract_json_object(content)
