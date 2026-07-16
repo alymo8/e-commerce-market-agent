@@ -9,3 +9,10 @@ def test_sentiment_counts_sum_to_total():
     assert d["total"] >= 8
     assert isinstance(d["top_positive_themes"], list)
     assert len(d["sample_reviews"]) >= 1
+
+
+def test_themes_are_deterministic():
+    result = SentimentAnalyzerTool().run(product="iPhone 15")
+    data = result.data
+    assert data["top_positive_themes"] == ["amazing", "worth", "best"]
+    assert data["top_negative_themes"] == ["slow", "unhelpful", "expensive"]

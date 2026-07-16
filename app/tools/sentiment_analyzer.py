@@ -1,8 +1,8 @@
 from app.tools.base import BaseTool
 from app.tools.mockdata import mock_reviews
 
-_POSITIVE_WORDS = {"amazing", "fantastic", "great", "best", "worth", "premium", "recommend", "fast"}
-_NEGATIVE_WORDS = {"expensive", "disappointed", "slow", "stopped", "unhelpful", "too"}
+_POSITIVE_WORDS = ("amazing", "best", "fantastic", "fast", "great", "premium", "recommend", "worth")
+_NEGATIVE_WORDS = ("disappointed", "expensive", "slow", "stopped", "too", "unhelpful")
 
 
 def _classify(review: str) -> str:
@@ -16,7 +16,7 @@ def _classify(review: str) -> str:
     return "neutral"
 
 
-def _themes(reviews: list[str], words: set[str]) -> list[str]:
+def _themes(reviews: list[str], words: tuple[str, ...]) -> list[str]:
     hits = [w for r in reviews for w in words if w in r.lower()]
     seen = []
     for w in hits:
