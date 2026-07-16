@@ -5,6 +5,10 @@ import pandas as pd
 import streamlit as st
 
 API_URL = os.getenv("API_URL", "http://localhost:8000")
+# Render's `fromService ... property: host` injects a bare hostname with no scheme;
+# prepend https:// so the httpx calls below have a valid absolute URL.
+if not API_URL.startswith(("http://", "https://")):
+    API_URL = "https://" + API_URL
 
 st.set_page_config(page_title="Market Analysis Agent", page_icon="📊", layout="wide")
 st.title("📊 E-commerce Market Analysis Agent")
