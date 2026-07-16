@@ -1,0 +1,103 @@
+{
+  "product": "iPhone 15",
+  "marketplace": "amazon",
+  "price": {
+    "price": 1081.33,
+    "currency": "USD",
+    "source": "mock"
+  },
+  "competitors": [
+    {
+      "name": "BestBuy",
+      "price": 1181.87
+    },
+    {
+      "name": "Walmart",
+      "price": 1035.84
+    },
+    {
+      "name": "eBay",
+      "price": 1186.24
+    }
+  ],
+  "sentiment": {
+    "positive": 10,
+    "neutral": 2,
+    "negative": 3,
+    "total": 15,
+    "top_positive_themes": [
+      "amazing",
+      "worth",
+      "best"
+    ],
+    "top_negative_themes": [
+      "slow",
+      "unhelpful",
+      "expensive"
+    ]
+  },
+  "trend": {
+    "direction": "up",
+    "price_change_pct": 2.62,
+    "price_history": [
+      {
+        "month": "2026-01",
+        "price": 1049.67
+      },
+      {
+        "month": "2026-02",
+        "price": 1078.95
+      },
+      {
+        "month": "2026-03",
+        "price": 1110.35
+      },
+      {
+        "month": "2026-04",
+        "price": 1081.31
+      },
+      {
+        "month": "2026-05",
+        "price": 1083.26
+      },
+      {
+        "month": "2026-06",
+        "price": 1077.16
+      }
+    ],
+    "popularity": [
+      {
+        "month": "2026-01",
+        "value": 79.7
+      },
+      {
+        "month": "2026-02",
+        "value": 76.3
+      },
+      {
+        "month": "2026-03",
+        "value": 77.9
+      },
+      {
+        "month": "2026-04",
+        "value": 83.2
+      },
+      {
+        "month": "2026-05",
+        "value": 81.1
+      },
+      {
+        "month": "2026-06",
+        "value": 75.8
+      }
+    ]
+  },
+  "summary": "iPhone 15 holds a premium price with strong positive sentiment driven by camera and build quality; the price trend is mildly upward.",
+  "recommendations": [
+    "Maintain premium positioning; sentiment supports the price.",
+    "Highlight camera quality in marketing \u2014 the top positive theme.",
+    "Watch competitor prices; two undercut the listed price."
+  ],
+  "warnings": [],
+  "generated_at": "2026-07-16T00:50:45.737244+00:00"
+}
