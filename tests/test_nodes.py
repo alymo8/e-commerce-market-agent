@@ -35,3 +35,30 @@ def test_synthesize_node_falls_back_on_llm_error(monkeypatch):
     assert "synthesis" in update
     assert update["errors"]  # error recorded
     assert update["synthesis"]["recommendations"]  # safe default present
+
+
+def test_plan_node_preserves_marketplace_when_plan_returns_none(monkeypatch):
+    monkeypatch.setattr(
+        nodes, "complete_json",
+        lambda system, user: {"normalized_product": "iPhone 15", "marketplace": None, "focus": ""},
+    )
+    update = nodes.plan_node({"product": "iPhone 15", "marketplace": "amazon", "errors": []})
+    assert update["marketplace"] == "amazon"
+
+
+def test_plan_node_preserves_marketplace_when_plan_returns_null_string(monkeypatch):
+    monkeypatch.setattr(
+        nodes, "complete_json",
+        lambda system, user: {"normalized_product": "iPhone 15", "marketplace": "null", "focus": ""},
+    )
+    update = nodes.plan_node({"product": "iPhone 15", "marketplace": "amazon", "errors": []})
+    assert update["marketplace"] == "amazon"
+
+
+def test_plan_node_uses_plan_marketplace_when_present(monkeypatch):
+    monkeypatch.setattr(
+        nodes, "complete_json",
+        lambda system, user: {"normalized_product": "iPhone 15", "marketplace": "ebay", "focus": ""},
+    )
+    update = nodes.plan_node({"product": "iPhone 15", "marketplace": "amazon", "errors": []})
+    assert update["marketplace"] == "ebay"

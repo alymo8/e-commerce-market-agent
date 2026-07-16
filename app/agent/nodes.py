@@ -28,10 +28,12 @@ def plan_node(state: dict) -> dict:
         plan = {"normalized_product": product, "marketplace": marketplace, "focus": ""}
         return {"plan": plan, "product": product, "marketplace": marketplace,
                 "errors": [_err("planner", str(exc))]}
+    plan_marketplace = plan.get("marketplace")
+    resolved_marketplace = plan_marketplace if plan_marketplace not in (None, "null", "") else marketplace
     return {
         "plan": plan,
         "product": plan.get("normalized_product") or product,
-        "marketplace": plan.get("marketplace") if plan.get("marketplace") != "null" else marketplace,
+        "marketplace": resolved_marketplace,
     }
 
 
