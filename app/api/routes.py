@@ -7,6 +7,18 @@ from app.api.schemas import AnalyzeRequest, AnalyzeResponse
 router = APIRouter()
 
 
+@router.get("/")
+def root() -> dict:
+    """Friendly landing response so hitting the bare API URL isn't a bare 404."""
+    return {
+        "service": "e-commerce market analysis agent",
+        "docs": "/docs",
+        "health": "/health",
+        "analyze": "POST /analyze  {\"product\": \"iPhone 15\", \"marketplace\": \"amazon\"}",
+        "get_analysis": "GET /analyses/{id}",
+    }
+
+
 @router.get("/health")
 def health() -> dict:
     return {"status": "ok"}

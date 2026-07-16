@@ -9,6 +9,14 @@ def test_health():
     assert client.get("/health").json()["status"] == "ok"
 
 
+def test_root_returns_service_info():
+    resp = client.get("/")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["health"] == "/health"
+    assert body["docs"] == "/docs"
+
+
 def test_analyze_returns_report_and_is_retrievable(fake_llm):
     resp = client.post("/analyze", json={"product": "iPhone 15", "marketplace": "amazon"})
     assert resp.status_code == 200
