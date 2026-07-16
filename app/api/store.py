@@ -5,11 +5,15 @@ from app.core.config import get_settings
 from app.core.report import MarketReport
 
 _BY_ID: dict[str, MarketReport] = {}
-_CACHE: dict[str, tuple[float, str]] = {}  # key -> (expires_at, analysis_id)
+_CACHE: dict[tuple[str, str], tuple[float, str]] = {}  # key -> (expires_at, analysis_id)
+
+# In-memory demo store: not evicted, not synchronized, and per-process only
+# (not safe across multiple uvicorn workers). Production persistence is covered
+# as a design/theory answer, not implemented here.
 
 
-def _key(product: str, marketplace: str | None) -> str:
-    return f"{product.lower().strip()}::{(marketplace or '').lower().strip()}"
+def _key(product: str, marketplace: str | None) -> tuple[str, str]:
+    return (product.lower().strip(), (marketplace or "").lower().strip())
 
 
 def save(report: MarketReport) -> str:

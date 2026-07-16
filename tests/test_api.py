@@ -23,3 +23,8 @@ def test_analyze_returns_report_and_is_retrievable(fake_llm):
 
 def test_unknown_analysis_returns_404():
     assert client.get("/analyses/does-not-exist").status_code == 404
+
+
+def test_cache_key_no_delimiter_collision():
+    from app.api import store
+    assert store._key("a::", "b") != store._key("a", "::b")
