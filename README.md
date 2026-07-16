@@ -1,5 +1,7 @@
 # e-commerce market-analysis agent
 
+[![CI](https://github.com/alymo8/e-commerce-market-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/alymo8/e-commerce-market-agent/actions/workflows/ci.yml)
+
 An intelligent agent that orchestrates four specialized tools — a web scraper, a
 sentiment analyzer, a trend analyzer, and a report generator — behind a LangGraph
 `StateGraph` to turn a free-text product name into a structured, validated market-
@@ -30,6 +32,27 @@ abort the run: each node absorbs its own tool's failure into a safe fallback val
 an entry in `warnings`, so the graph always reaches `report` and returns a report —
 complete, or partial with the degradation explained. See
 [`docs/architecture.md`](docs/architecture.md) for the full request lifecycle.
+
+## Live demo
+
+A live instance is deployed on Render (free tier):
+
+- **UI (Streamlit dashboard):** https://market-agent-ui.onrender.com
+- **API (FastAPI):** https://market-agent-api-ku8x.onrender.com — interactive docs at [`/docs`](https://market-agent-api-ku8x.onrender.com/docs)
+
+Try the API from the terminal:
+
+```bash
+curl -s https://market-agent-api-ku8x.onrender.com/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"product": "iPhone 15", "marketplace": "amazon"}'
+```
+
+> **Free-tier note:** the services sleep after ~15 minutes of inactivity, so the first
+> request (or first UI load) after a lull cold-starts in ~30–60 s. If the Streamlit UI
+> shows *"Failed to fetch dynamically imported module"* on that first cold load,
+> hard-refresh the page (Ctrl/Cmd+Shift+R) — it is a stale-cache artifact of the cold
+> start, not a deploy failure.
 
 ## 1. Architecture
 
