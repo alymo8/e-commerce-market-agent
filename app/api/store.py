@@ -36,3 +36,16 @@ def get_cached(product: str, marketplace: str | None) -> MarketReport | None:
     if time.time() > expires_at:
         return None
     return _BY_ID.get(analysis_id)
+
+
+def get_cached_with_id(product: str, marketplace: str | None) -> tuple[MarketReport, str] | None:
+    entry = _CACHE.get(_key(product, marketplace))
+    if not entry:
+        return None
+    expires_at, analysis_id = entry
+    if time.time() > expires_at:
+        return None
+    report = _BY_ID.get(analysis_id)
+    if report is None:
+        return None
+    return report, analysis_id

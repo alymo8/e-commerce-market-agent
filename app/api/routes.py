@@ -14,11 +14,15 @@ def health() -> dict:
 
 @router.post("/analyze", response_model=AnalyzeResponse)
 def analyze(req: AnalyzeRequest, response: Response) -> AnalyzeResponse:
-    cached = store.get_cached(req.product, req.marketplace)
-    report = cached or run_analysis(req.product, req.marketplace)
-    analysis_id = store.save(report)
+    cached = store.get_cached_with_id(req.product, req.marketplace)
+    if cached is not None:
+        report, analysis_id = cached
+        response.headers["X-Cache"] = "HIT"
+    else:
+        report = run_analysis(req.product, req.marketplace)
+        analysis_id = store.save(report)
+        response.headers["X-Cache"] = "MISS"
     response.headers["X-Analysis-Id"] = analysis_id
-    response.headers["X-Cache"] = "HIT" if cached else "MISS"
     return report
 
 
